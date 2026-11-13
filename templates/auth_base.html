@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="auth">
+  <aside class="auth-side">
+    <a class="brand brand-light" href="{% url 'home' %}">ShoeCare</a>
+    <div>
+      <h1>Drop off dirty. Pick up clean.</h1>
+      <p>Request a cleaning, follow your shoes through every step, and know exactly when they're ready.</p>
+      <ol class="steps" aria-label="How an order moves">
+        <li>Pending</li><li>Received</li><li>Cleaning</li><li>Ready for pickup</li><li>Completed</li>
+      </ol>
+    </div>
+  </aside>
+  <main id="main" class="auth-main">
+    <div class="auth-card">
+      {% include "partials/_messages.html" %}
+      {% block auth_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}

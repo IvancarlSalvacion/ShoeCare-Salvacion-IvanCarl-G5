@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Shop overview</h1>
+    <p class="lede">Accounts and, soon, requests and revenue.</p>
+  </div>
+  <span class="badge badge-admin">Administrator</span>
+</div>
+<div class="grid">
+  <section class="card stitched stat"><p class="stat-n">{{ customer_count }}</p><p>Customers</p></section>
+  <section class="card stitched stat"><p class="stat-n">{{ staff_count }}</p><p>Staff</p></section>
+  <section class="card stitched stat"><p class="stat-n">{{ admin_count }}</p><p>Administrators</p></section>
+</div>
+<section class="card stitched wide">
+  <div class="card-head">
+    <h2>Newest accounts</h2>
+    <a class="link" href="{% url 'admin:accounts_user_changelist' %}">Manage users</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
+      <tbody>
+      {% for u in recent_users %}
+        <tr>
+          <td>{{ u.full_name }}</td><td>{{ u.email }}</td>
+          <td><span class="badge badge-{{ u.role|lower }}">{{ u.get_role_display }}</span></td>
+          <td>{{ u.created_at|date:"M j, Y" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="empty">No accounts yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Customer dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Hi, {{ user.get_short_name }}</h1>
+    <p class="lede">Your shoes and orders will show up here.</p>
+  </div>
+  <span class="badge badge-customer">Customer</span>
+</div>
+<div class="grid">
+  <section class="card stitched">
+    <h2>Active orders</h2>
+    <p class="empty">No orders yet. Requesting a cleaning opens in the next phase.</p>
+  </section>
+  <section class="card stitched">
+    <h2>Order history</h2>
+    <p class="empty">Completed cleanings will be listed here.</p>
+  </section>
+  <section class="card stitched">
+    <h2>Your account</h2>
+    <p>{{ user.email }}</p>
+    <a class="link" href="{% url 'profile' %}">View profile</a>
+  </section>
+</div>
+{% endblock %}

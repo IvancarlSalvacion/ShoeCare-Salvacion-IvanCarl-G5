@@ -1,0 +1,101 @@
+from django.contrib import messages
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from django.db.models import Count
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
+
+from .decorators import role_required
+from .forms import LoginForm, ProfileForm, RegistrationForm
+from .models import User
+
+
+def home(request):
+    if request.user.is_authenticated:
+        return redirect(request.user.dashboard_url_name)
+    return redirect("login")
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect(request.user.dashboard_url_name)
+
+    form = RegistrationForm(request.POST or None)
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account created. Log in with your email and password.")
+            return redirect("login")
+        messages.error(request, "We couldn't create your account. Fix the highlighted fields and try again.")
+    return render(request, "accounts/register.html", {"form": form})
+
+
+class ShoeCareLoginView(LoginView):
+    template_name = "accounts/login.html"
+    authentication_form = LoginForm
+    redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Welcome back, {form.get_user().get_short_name()}.")
+        return response
+
+
+@require_POST
+def logout_view(request):
+    logout(request)
+    messages.info(request, "You've been logged out.")
+    return redirect("login")
+
+
+@login_required
+def dashboard(request):
+    """Send each user to the dashboard that matches their role."""
+    return redirect(request.user.dashboard_url_name)
+
+
+@role_required(User.Role.CUSTOMER)
+def customer_dashboard(request):
+    return render(request, "dashboards/customer.html")
+
+
+@role_required(User.Role.STAFF)
+def staff_dashboard(request):
+    return render(request, "dashboards/staff.html")
+
+
+@role_required(User.Role.ADMIN)
+def admin_dashboard(request):
+    counts = {row["role"]: row["n"] for row in User.objects.values("role").annotate(n=Count("pk"))}
+    context = {
+        "customer_count": counts.get(User.Role.CUSTOMER, 0),
+        "staff_count": counts.get(User.Role.STAFF, 0),
+        "admin_count": counts.get(User.Role.ADMIN, 0),
+        "recent_users": User.objects.order_by("-created_at")[:5],
+    }
+    return render(request, "dashboards/admin.html", context)
+
+
+# Profile views never take a user id: they always act on request.user,
+# so nobody can view or edit someone else's profile.
+@login_required
+def profile(request):
+    return render(request, "accounts/profile.html")
+
+
+@login_required
+def profile_edit(request):
+    form = ProfileForm(request.POST or None, request.FILES or None, instance=request.user)
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated.")
+            return redirect("profile")
+        messages.error(request, "We couldn't save your changes. Fix the highlighted fields and try again.")
+    return render(request, "accounts/profile_edit.html", {"form": form})
+
+
+@login_required
+def coming_soon(request, feature):
+    return render(request, "coming_soon.html", {"feature": feature.replace("-", " ").capitalize()})

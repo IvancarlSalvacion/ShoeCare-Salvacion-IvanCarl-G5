@@ -1,0 +1,38 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ShoeCare{% endblock %} - ShoeCare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+{% block body %}
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="{% url 'home' %}">ShoeCare</a>
+    <nav class="nav" aria-label="Main">
+      {% for item in nav_items %}
+        <a href="{{ item.url }}" {% if item.active %}aria-current="page"{% endif %}>{{ item.label }}</a>
+      {% endfor %}
+    </nav>
+    <div class="who">
+      <a class="avatar" href="{% url 'profile' %}" aria-label="Your profile">
+        {% if user.profile_photo %}<img src="{{ user.profile_photo.url }}" alt="">{% else %}{{ user.initials }}{% endif %}
+      </a>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn btn-quiet" type="submit">Log out</button>
+      </form>
+    </div>
+  </header>
+  <main id="main" class="page">
+    {% include "partials/_messages.html" %}
+    {% block content %}{% endblock %}
+  </main>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Your profile</h1>
+  <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
+</div>
+<section class="card stitched profile">
+  <div class="avatar avatar-lg">
+    {% if user.profile_photo %}<img src="{{ user.profile_photo.url }}" alt="Your profile photo">{% else %}{{ user.initials }}{% endif %}
+  </div>
+  <dl class="details">
+    <div><dt>Full name</dt><dd>{{ user.full_name }}</dd></div>
+    <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+    <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not added yet" }}</dd></div>
+    <div><dt>Role</dt><dd><span class="badge badge-{{ user.role|lower }}">{{ user.get_role_display }}</span></dd></div>
+    <div><dt>Member since</dt><dd>{{ user.created_at|date:"F j, Y" }}</dd></div>
+  </dl>
+</section>
+{% endblock %}

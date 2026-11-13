@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Edit profile{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Edit profile</h1></div>  
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="error error-box">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    {% include "partials/_field.html" with field=form.full_name %}
+    {% include "partials/_field.html" with field=form.email %}
+    {% include "partials/_field.html" with field=form.contact_number %}
+    {% include "partials/_field.html" with field=form.profile_photo %}
+    {% if user.profile_photo %}
+      <label class="check">{{ form.remove_photo }} {{ form.remove_photo.label }}</label>
+    {% endif %}
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Save changes</button>
+      <a class="btn btn-quiet" href="{% url 'profile' %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

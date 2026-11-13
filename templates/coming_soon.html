@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ feature }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ feature }}</h1></div>
+<section class="card stitched">
+  <p class="empty">This feature isn't available yet. It will open in a later phase of ShoeCare.</p>
+  <p><a class="link" href="{% url 'dashboard' %}">Back to your dashboard</a></p>
+</section>
+{% endblock %}
