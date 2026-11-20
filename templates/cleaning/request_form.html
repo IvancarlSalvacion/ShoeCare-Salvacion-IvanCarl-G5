@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ title }}</h1><p class="lede">Add each pair you'd like cleaned. Prices are locked in when you submit.</p></div>
+</div>
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {% if formset.non_form_errors %}<p class="error error-box">{{ formset.non_form_errors|join:" " }}</p>{% endif %}
+
+  {% for form in formset %}
+  <fieldset class="card stitched pair">
+    <legend>Pair {{ forloop.counter }}</legend>
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+    {% if form.non_field_errors %}<p class="error error-box">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    <div class="two-col">
+      {% include "partials/_field.html" with field=form.service %}
+      {% include "partials/_field.html" with field=form.quantity %}
+      {% include "partials/_field.html" with field=form.shoe_brand %}
+      {% include "partials/_field.html" with field=form.shoe_color %}
+    </div>
+    {% if form.instance.photo %}<p class="help">Current photo: <img class="thumb" src="{{ form.instance.photo.url }}" alt="Current shoe photo"></p>{% endif %}
+    {% include "partials/_field.html" with field=form.photo %}
+    {% if form.DELETE %}<label class="check">{{ form.DELETE }} Remove this pair</label>{% endif %}
+  </fieldset>
+  {% endfor %}
+
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">{% if editing %}Save changes{% else %}Submit request{% endif %}</button>
+    <a class="btn btn-quiet" href="{% if editing %}{% url 'request_detail' sr.pk %}{% else %}{% url 'request_list' %}{% endif %}">Cancel</a>
+  </div>
+  <p class="help">Leave unused pairs empty. You can add up to 20 pairs per request.</p>
+</form>
+{% endblock %}

@@ -4,15 +4,26 @@
 <div class="page-head">
   <div>
     <h1>Shop overview</h1>
-    <p class="lede">Accounts and, soon, requests and revenue.</p>
+    <p class="lede">Accounts, services, and every request in one place.</p>
   </div>
   <span class="badge badge-admin">Administrator</span>
+</div>
+<div class="grid">
+  <section class="card stitched stat"><p class="stat-n">{{ open_count }}</p><p>Open requests</p></section>
+  <section class="card stitched stat"><p class="stat-n">{{ completed_count }}</p><p>Completed requests</p></section>
+  <section class="card stitched stat"><p class="stat-n">₱{{ revenue|floatformat:2 }}</p><p>Revenue collected</p></section>
 </div>
 <div class="grid">
   <section class="card stitched stat"><p class="stat-n">{{ customer_count }}</p><p>Customers</p></section>
   <section class="card stitched stat"><p class="stat-n">{{ staff_count }}</p><p>Staff</p></section>
   <section class="card stitched stat"><p class="stat-n">{{ admin_count }}</p><p>Administrators</p></section>
 </div>
+
+<section class="card stitched wide">
+  <div class="card-head"><h2>Latest requests</h2><a class="link" href="{% url 'request_list' %}">See all</a></div>
+  {% include "cleaning/_request_table.html" with requests=recent_requests show_customer=True empty_text="No requests yet." %}
+</section>
+
 <section class="card stitched wide">
   <div class="card-head">
     <h2>Newest accounts</h2>

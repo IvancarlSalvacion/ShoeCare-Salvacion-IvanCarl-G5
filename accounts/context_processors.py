@@ -3,17 +3,9 @@ from django.urls import reverse
 
 from .models import User
 
-ICONS = {
-    "Services": "droplet",
-    "New request": "plus",
-    "My requests": "list",
-    "Requests": "list",
-    "Reports": "chart",
-}
-
 
 def navigation(request):
-    """Role-specific navigation. Unbuilt features point to a 'Coming soon' page."""
+    """Role-specific navigation. Features not built yet point to a 'Coming soon' page."""
     user = request.user
     if not user.is_authenticated:
         return {}
@@ -22,19 +14,24 @@ def navigation(request):
     current = match.url_name if match else ""
     current_feature = match.kwargs.get("feature") if match else None
 
-    items = [{"label": "Dashboard", "icon": "home", "url": reverse(user.dashboard_url_name),
-              "active": current == user.dashboard_url_name}]
+    def real(label, url_name, *names):
+        return {"label": label, "url": reverse(url_name), "active": current in (url_name, *names)}
 
-    extras = {
-        User.Role.CUSTOMER: ["Services", "New request", "My requests"],
-        User.Role.STAFF: ["Requests", "Services"],
-        User.Role.ADMIN: ["Requests", "Services", "Reports"],
-    }[user.role]
-    for label in extras:
+    def soon(label):
         slug = slugify(label)
-        items.append({"label": label, "icon": ICONS[label], "url": reverse("coming_soon", args=[slug]),
-                      "active": current == "coming_soon" and current_feature == slug})
+        return {"label": label, "url": reverse("coming_soon", args=[slug]),
+                "active": current == "coming_soon" and current_feature == slug}
 
-    items.append({"label": "Profile", "icon": "user", "url": reverse("profile"),
-                  "active": current in ("profile", "profile_edit")})
+    services = real("Services", "service_list", "service_create", "service_edit", "service_delete")
+    if user.role == User.Role.CUSTOMER:
+        items = [real("Dashboard", "customer_dashboard"), services,
+                 real("New request", "request_create"),
+                 real("My requests", "request_list", "request_detail", "request_edit", "request_delete")]
+    elif user.role == User.Role.STAFF:
+        items = [real("Dashboard", "staff_dashboard"),
+                 real("Requests", "request_list", "request_detail", "request_delete"), services]
+    else:
+        items = [real("Dashboard", "admin_dashboard"),
+                 real("Requests", "request_list", "request_detail", "request_delete"), services, soon("Reports")]
+    items.append(real("Profile", "profile", "profile_edit"))
     return {"nav_items": items}
