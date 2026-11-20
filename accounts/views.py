@@ -2,13 +2,18 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
+
+from cleaning.models import Payment, ServiceRequest
 
 from .decorators import role_required
 from .forms import LoginForm, ProfileForm, RegistrationForm
 from .models import User
+
+Status = ServiceRequest.Status
+CLOSED = [Status.COMPLETED, Status.CANCELLED]
 
 
 def home(request):
@@ -57,21 +62,39 @@ def dashboard(request):
 
 @role_required(User.Role.CUSTOMER)
 def customer_dashboard(request):
-    return render(request, "dashboards/customer.html")
+    mine = ServiceRequest.objects.filter(user=request.user)
+    return render(request, "dashboards/customer.html", {
+        "active_count": mine.exclude(status__in=CLOSED).count(),
+        "completed_count": mine.filter(status=Status.COMPLETED).count(),
+        "recent_requests": mine.prefetch_related("items")[:5],
+    })
 
 
 @role_required(User.Role.STAFF)
 def staff_dashboard(request):
-    return render(request, "dashboards/staff.html")
+    counts = {row["status"]: row["n"] for row in ServiceRequest.objects.values("status").annotate(n=Count("pk"))}
+    return render(request, "dashboards/staff.html", {
+        "pending_count": counts.get(Status.PENDING, 0),
+        "received_count": counts.get(Status.RECEIVED, 0),
+        "cleaning_count": counts.get(Status.CLEANING, 0),
+        "ready_count": counts.get(Status.READY, 0),
+        "queue": ServiceRequest.objects.exclude(status__in=CLOSED).select_related("user")
+                 .prefetch_related("items").order_by("request_date")[:8],
+    })
 
 
 @role_required(User.Role.ADMIN)
 def admin_dashboard(request):
     counts = {row["role"]: row["n"] for row in User.objects.values("role").annotate(n=Count("pk"))}
+    revenue = Payment.objects.filter(payment_status=Payment.PayStatus.PAID).aggregate(t=Sum("amount_paid"))["t"] or 0
     context = {
         "customer_count": counts.get(User.Role.CUSTOMER, 0),
         "staff_count": counts.get(User.Role.STAFF, 0),
         "admin_count": counts.get(User.Role.ADMIN, 0),
+        "open_count": ServiceRequest.objects.exclude(status__in=CLOSED).count(),
+        "completed_count": ServiceRequest.objects.filter(status=Status.COMPLETED).count(),
+        "revenue": revenue,
+        "recent_requests": ServiceRequest.objects.select_related("user").prefetch_related("items")[:5],
         "recent_users": User.objects.order_by("-created_at")[:5],
     }
     return render(request, "dashboards/admin.html", context)

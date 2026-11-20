@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ heading }}</h1></div>
+<section class="card stitched form-card">
+  <p><strong>{{ object_label }}</strong></p>
+  <p class="empty">{{ warning }}</p>
+  <form method="post" class="actions">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Yes, delete</button>
+    <a class="btn btn-quiet" href="{% if back_args %}{% url back_url back_args.0 %}{% else %}{% url back_url %}{% endif %}">Keep it</a>
+  </form>
+</section>
+{% endblock %}

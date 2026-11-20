@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Services{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Services</h1><p class="lede">Cleaning and restoration for every kind of shoe.</p></div>
+  {% if is_admin %}<a class="btn btn-primary" href="{% url 'service_create' %}">Add service</a>{% endif %}
+</div>
+
+<form class="toolbar" method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search services" aria-label="Search services">
+  {% if show_all %}<input type="hidden" name="show" value="all">{% endif %}
+  <button class="btn btn-primary" type="submit">Search</button>
+  {% if q %}<a class="btn btn-quiet" href="{% url 'service_list' %}{% if show_all %}?show=all{% endif %}">Clear</a>{% endif %}
+  {% if is_admin %}
+    {% if show_all %}<a class="link" href="{% url 'service_list' %}">Hide inactive</a>
+    {% else %}<a class="link" href="?show=all">Show inactive</a>{% endif %}
+  {% endif %}
+</form>
+
+<div class="grid">
+  {% for s in services %}
+  <section class="card stitched">
+    <h2>{{ s.service_name }}</h2>
+    {% if not s.is_active %}<span class="badge status-cancelled">Hidden</span>{% endif %}
+    <p class="empty">{{ s.description|default:"No description yet." }}</p>
+    <p class="price">₱{{ s.base_price|floatformat:2 }} <small>per pair</small></p>
+    {% if request.user.role == 'CUSTOMER' and s.is_active %}
+      <a class="btn btn-primary" href="{% url 'request_create' %}?service={{ s.pk }}">Request this service</a>
+    {% endif %}
+    {% if is_admin %}
+      <div class="actions">
+        <a class="btn btn-quiet" href="{% url 'service_edit' s.pk %}">Edit</a>
+        <form method="post" action="{% url 'service_toggle' s.pk %}">{% csrf_token %}
+          <button class="btn btn-quiet" type="submit">{% if s.is_active %}Hide{% else %}Show{% endif %}</button></form>
+        <a class="btn btn-quiet" href="{% url 'service_delete' s.pk %}">Delete</a>
+      </div>
+    {% endif %}
+  </section>
+  {% empty %}
+  <section class="card stitched"><p class="empty">{% if q %}No services match “{{ q }}”.{% else %}No services yet.{% endif %}</p></section>
+  {% endfor %}
+</div>
+{% endblock %}
