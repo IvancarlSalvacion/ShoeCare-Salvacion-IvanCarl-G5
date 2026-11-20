@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1></div>
+<section class="card stitched form-card">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="error error-box">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    {% include "partials/_field.html" with field=form.service_name %}
+    {% include "partials/_field.html" with field=form.description %}
+    {% include "partials/_field.html" with field=form.base_price %}
+    <label class="check">{{ form.is_active }} {{ form.is_active.label }}</label>
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Save service</button>
+      <a class="btn btn-quiet" href="{% url 'service_list' %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
