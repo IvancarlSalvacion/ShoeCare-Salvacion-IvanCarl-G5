@@ -4,22 +4,18 @@
 <div class="page-head">
   <div>
     <h1>Front desk, {{ user.get_short_name }}</h1>
-    <p class="lede">Incoming requests and shoes in progress will show up here.</p>
+    <p class="lede">Receive shoes, move them through cleaning, and hand them back.</p>
   </div>
-  <span class="badge badge-staff">Staff</span>
+  <a class="btn btn-primary" href="{% url 'request_list' %}">All requests</a>
 </div>
 <div class="grid">
-  <section class="card stitched">
-    <h2>Needs receiving</h2>
-    <p class="empty">No pending requests. Request management opens in a later phase.</p>
-  </section>
-  <section class="card stitched">
-    <h2>In cleaning</h2>
-    <p class="empty">Shoes being cleaned will be listed here.</p>
-  </section>
-  <section class="card stitched">
-    <h2>Ready for pickup</h2>
-    <p class="empty">Finished orders waiting for customers will appear here.</p>
-  </section>
+  <a class="card stitched stat statlink" href="{% url 'request_list' %}?status=PENDING"><p class="stat-n">{{ pending_count }}</p><p>Pending (needs receiving)</p></a>
+  <a class="card stitched stat statlink" href="{% url 'request_list' %}?status=RECEIVED"><p class="stat-n">{{ received_count }}</p><p>Received</p></a>
+  <a class="card stitched stat statlink" href="{% url 'request_list' %}?status=CLEANING"><p class="stat-n">{{ cleaning_count }}</p><p>In cleaning</p></a>
+  <a class="card stitched stat statlink" href="{% url 'request_list' %}?status=READY"><p class="stat-n">{{ ready_count }}</p><p>Ready for pickup</p></a>
 </div>
+<section class="card stitched wide">
+  <h2>Work queue (oldest first)</h2>
+  {% include "cleaning/_request_table.html" with requests=queue show_customer=True empty_text="Nothing in the queue. All caught up!" %}
+</section>
 {% endblock %}

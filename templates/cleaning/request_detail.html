@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Request #{{ sr.pk }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Request #{{ sr.pk }}</h1>
+    <p class="lede">{% if is_manager %}{{ sr.user.full_name }} ({{ sr.user.email }}) · {% endif %}Submitted {{ sr.request_date|date:"F j, Y, g:i A" }}</p>
+  </div>
+  <span class="badge status-{{ sr.status|lower }}">{{ sr.get_status_display }}</span>
+</div>
+
+{% if steps %}
+<ol class="flow" aria-label="Order progress">
+  {% for s in steps %}<li class="flow-{{ s.state }}"><span class="dot"></span>{{ s.label }}</li>{% endfor %}
+</ol>
+{% endif %}
+
+<div class="grid">
+  <section class="card stitched stat"><p class="stat-n">₱{{ sr.total_amount|floatformat:2 }}</p><p>Total</p></section>
+  <section class="card stitched stat"><p class="stat-n">{{ sr.pair_count }}</p><p>Pairs</p></section>
+  <section class="card stitched stat"><p class="stat-n pickup">{{ sr.scheduled_pickup|date:"M j, Y"|default:"Not set" }}</p><p>Pickup date</p></section>
+</div>
+
+<section class="card stitched wide">
+  <h2>Shoes</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Photo</th><th>Shoe</th><th>Service</th><th>Pairs</th><th>Price</th><th>Subtotal</th></tr></thead>
+      <tbody>
+      {% for i in items %}
+        <tr>
+          <td>{% if i.photo %}<a href="{{ i.photo.url }}" target="_blank" rel="noopener"><img class="thumb" src="{{ i.photo.url }}" alt="Photo of {{ i.shoe_brand }}"></a>{% else %}-{% endif %}</td>
+          <td>{{ i.shoe_brand }}<br><small class="muted">{{ i.shoe_color }}</small></td>
+          <td>{{ i.service.service_name }}</td><td>{{ i.quantity }}</td>
+          <td>₱{{ i.unit_price|floatformat:2 }}</td><td>₱{{ i.line_total|floatformat:2 }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if payment %}
+<section class="card stitched wide">
+  <h2>Payment</h2>
+  <p>₱{{ payment.amount_paid|floatformat:2 }} · {{ payment.get_payment_method_display }} · <strong>{{ payment.get_payment_status_display }}</strong></p>
+</section>
+{% endif %}
+
+{% if can_edit or can_cancel or can_delete or can_advance or can_schedule %}
+<section class="card stitched wide">
+  <h2>Actions</h2>
+  <div class="actions wrap">
+    {% if can_edit %}<a class="btn btn-primary" href="{% url 'request_edit' sr.pk %}">Edit request</a>{% endif %}
+
+    {% if can_advance %}
+    <form method="post" action="{% url 'request_advance' sr.pk %}" class="inline-form">
+      {% csrf_token %}
+      {% if sr.next_status == 'COMPLETED' %}
+        <label for="pm">Payment</label>
+        <select id="pm" name="payment_method">{% for v, l in payment_methods %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+      {% endif %}
+      <button class="btn btn-primary" type="submit">Move to {{ sr.next_status_label }}</button>
+    </form>
+    {% endif %}
+
+    {% if can_cancel %}
+    <form method="post" action="{% url 'request_cancel' sr.pk %}" onsubmit="return confirm('Cancel this request?');">{% csrf_token %}
+      <button class="btn btn-quiet" type="submit">Cancel request</button></form>
+    {% endif %}
+
+    {% if can_delete %}<a class="btn btn-danger" href="{% url 'request_delete' sr.pk %}">Delete request</a>{% endif %}
+  </div>
+
+  {% if can_schedule %}
+  <form method="post" action="{% url 'request_pickup' sr.pk %}" class="inline-form pickup-form">
+    {% csrf_token %}
+    <label for="{{ pickup_form.scheduled_pickup.id_for_label }}">Pickup date</label>
+    {{ pickup_form.scheduled_pickup }}
+    <button class="btn btn-quiet" type="submit">Save pickup date</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card stitched wide">
+  <h2>Status history</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>When</th><th>Change</th><th>By</th></tr></thead>
+      <tbody>
+      {% for l in logs %}
+        <tr><td>{{ l.log_time|date:"M j, Y g:i A" }}</td>
+            <td>{% if l.status_from %}{{ l.status_from }} → {% endif %}{{ l.status_to }}</td>
+            <td>{{ l.updated_by.full_name }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+<p><a class="link" href="{% url 'request_list' %}">← Back to requests</a></p>
+{% endblock %}

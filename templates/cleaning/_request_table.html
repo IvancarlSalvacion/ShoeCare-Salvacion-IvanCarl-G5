@@ -1,0 +1,26 @@
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>{% if show_customer %}<th>Customer</th>{% endif %}<th>Pairs</th><th>Total</th>
+        <th>Status</th><th>Pickup</th><th>Submitted</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in requests %}
+      <tr>
+        <td>{{ r.request_id }}</td>
+        {% if show_customer %}<td>{{ r.user.full_name }}</td>{% endif %}
+        <td>{{ r.pair_count }}</td>
+        <td>₱{{ r.total_amount|floatformat:2 }}</td>
+        <td><span class="badge status-{{ r.status|lower }}">{{ r.get_status_display }}</span></td>
+        <td>{{ r.scheduled_pickup|date:"M j, Y"|default:"-" }}</td>
+        <td>{{ r.request_date|date:"M j, Y" }}</td>
+        <td><a class="link" href="{% url 'request_detail' r.pk %}">View</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" class="empty">{{ empty_text|default:"No requests yet." }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

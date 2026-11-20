@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if is_manager %}Requests{% else %}My requests{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{% if is_manager %}Service requests{% else %}My requests{% endif %}</h1>
+    <p class="lede">{% if is_manager %}Search and filter every customer's orders.{% else %}Every cleaning you've sent, past and present.{% endif %}</p>
+  </div>
+  {% if request.user.role == 'CUSTOMER' %}<a class="btn btn-primary" href="{% url 'request_create' %}">New request</a>{% endif %}
+</div>
+
+<form class="toolbar" method="get">
+  <input type="text" name="q" value="{{ form.q.value|default:'' }}" placeholder="{% if is_manager %}Customer name, email or #{% else %}Request #{% endif %}" aria-label="Search">
+  {{ form.status }}
+  {{ form.date }}
+  <button class="btn btn-primary" type="submit">Filter</button>
+  <a class="btn btn-quiet" href="{% url 'request_list' %}">Reset</a>
+</form>
+{% if form.errors %}<p class="error">Check the filters: {{ form.errors|striptags }}</p>{% endif %}
+
+<section class="card stitched wide">
+  {% include "cleaning/_request_table.html" with requests=page show_customer=is_manager empty_text="No requests match." %}
+  {% if page.paginator.num_pages > 1 %}
+  <nav class="pagination" aria-label="Pages">
+    {% if page.has_previous %}<a class="btn btn-quiet" href="?{% if query %}{{ query }}&{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn btn-quiet" href="?{% if query %}{{ query }}&{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}
