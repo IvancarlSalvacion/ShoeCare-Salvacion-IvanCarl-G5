@@ -13,5 +13,4 @@ urlpatterns = [
     path("dashboard/admin/", views.admin_dashboard, name="admin_dashboard"),
     path("profile/", views.profile, name="profile"),
     path("profile/edit/", views.profile_edit, name="profile_edit"),
-    path("coming-soon/<slug:feature>/", views.coming_soon, name="coming_soon"),
 ]

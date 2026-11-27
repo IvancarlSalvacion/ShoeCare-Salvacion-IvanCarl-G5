@@ -15,7 +15,7 @@
 </div>
 <div class="grid">
   <section class="card stitched stat"><p class="stat-n">{{ customer_count }}</p><p>Customers</p></section>
-  <section class="card stitched stat"><p class="stat-n">{{ staff_count }}</p><p>Staff</p></section>
+  <section class="card stitched stat"><p class="stat-n">{{ staff_count }}</p><p>Staff</p><a class="link" href="{% url 'admin:accounts_user_add' %}">Add staff account</a></section>
   <section class="card stitched stat"><p class="stat-n">{{ admin_count }}</p><p>Administrators</p></section>
 </div>
 
