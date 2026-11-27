@@ -34,5 +34,15 @@
     {% block content %}{% endblock %}
   </main>
 {% endblock %}
+<script>
+  // Stop double submissions: disable the submit button after the first click.
+  document.addEventListener("submit", function (e) {
+    var b = e.target.querySelector("button[type=submit]");
+    if (b && !e.defaultPrevented) { setTimeout(function () { b.disabled = true; }, 0); }
+  });
+  window.addEventListener("pageshow", function () {
+    document.querySelectorAll("button[type=submit]:disabled").forEach(function (b) { b.disabled = false; });
+  });
+</script>
 </body>
 </html>

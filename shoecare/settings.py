@@ -99,3 +99,14 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# --- Security hardening ------------------------------------------------------
+# Set SECURE_COOKIES=True in .env when the site is served over HTTPS.
+SECURE_COOKIES = os.getenv("SECURE_COOKIES", "False").lower() == "true"
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+SESSION_COOKIE_HTTPONLY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+CSRF_FAILURE_VIEW = "accounts.views.csrf_failure"  # friendly 403 page instead of Django's default
