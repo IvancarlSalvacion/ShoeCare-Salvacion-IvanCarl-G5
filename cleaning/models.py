@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import DecimalField, F, Q, Sum
+from django.db.models.functions import Lower
 
 # The five stages a request moves through (CANCELLED is a side exit from PENDING).
 STATUS_FLOW = ["PENDING", "RECEIVED", "CLEANING", "READY", "COMPLETED"]
@@ -19,7 +20,10 @@ class Service(models.Model):
     class Meta:
         db_table = "services"
         ordering = ["service_name"]
-        constraints = [models.CheckConstraint(condition=Q(base_price__gt=0), name="services_base_price_gt_0")]  # BR-03
+        constraints = [
+            models.CheckConstraint(condition=Q(base_price__gt=0), name="services_base_price_gt_0"),  # BR-03
+            models.UniqueConstraint(Lower("service_name"), name="services_name_unique_ci"),  # no duplicate names
+        ]  # BR-03
 
     def __str__(self):
         return self.service_name
@@ -27,6 +31,7 @@ class Service(models.Model):
 
 class ServiceRequest(models.Model):
     """service_requests table: one order placed by a customer."""
+    
 
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"
@@ -46,6 +51,7 @@ class ServiceRequest(models.Model):
     class Meta:
         db_table = "service_requests"
         ordering = ["-request_date", "-request_id"]
+        indexes = [models.Index(fields=["status"], name="sr_status_idx"), models.Index(fields=["-request_date"], name="sr_date_idx")]
         constraints = [
             models.CheckConstraint(  # BR-04
                 condition=Q(status__in=["PENDING", "RECEIVED", "CLEANING", "READY", "COMPLETED", "CANCELLED"]),

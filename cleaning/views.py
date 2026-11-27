@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-
+from django.db import IntegrityError, transaction
 from accounts.decorators import role_required
 from accounts.models import User
 
@@ -23,7 +23,7 @@ def _is_manager(user):
 
 def _get_request(user, pk):
     """Customers can only reach their own requests (others give a 404); staff/admin can reach all."""
-    qs = ServiceRequest.objects.select_related("user").prefetch_related("items__service")
+    qs = ServiceRequest.objects.select_related("user", "payment").prefetch_related("items__service")
     if user.role == User.Role.CUSTOMER:
         qs = qs.filter(user=user)
     return get_object_or_404(qs, pk=pk)
@@ -44,13 +44,23 @@ def service_list(request):
                   {"services": services, "q": q, "show_all": show_all, "is_admin": is_admin})
 
 
+def _save_service(form):
+    """Save inside a transaction; a duplicate name that slips past validation becomes a form error, not a 500."""
+    try:
+        with transaction.atomic():
+            form.save()
+        return True
+    except IntegrityError:
+        form.add_error("service_name", "A service with this name already exists.")
+        return False
+
+
 @role_required(User.Role.ADMIN)
 def service_create(request):
     form = ServiceForm(request.POST or None)
     if request.method == "POST":
-        if form.is_valid():
-            service = form.save()
-            messages.success(request, f"Service “{service.service_name}” added.")
+        if form.is_valid() and _save_service(form):
+            messages.success(request, f"Service “{form.instance.service_name}” added.")
             return redirect("service_list")
         messages.error(request, "We couldn't save the service. Fix the highlighted fields.")
     return render(request, "cleaning/service_form.html", {"form": form, "title": "Add service"})
@@ -61,8 +71,7 @@ def service_edit(request, pk):
     service = get_object_or_404(Service, pk=pk)
     form = ServiceForm(request.POST or None, instance=service)
     if request.method == "POST":
-        if form.is_valid():
-            form.save()
+        if form.is_valid() and _save_service(form):
             messages.success(request, "Service updated.")
             return redirect("service_list")
         messages.error(request, "We couldn't save the service. Fix the highlighted fields.")
