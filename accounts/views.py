@@ -120,5 +120,6 @@ def profile_edit(request):
 
 
 @login_required
-def coming_soon(request, feature):
-    return render(request, "coming_soon.html", {"feature": feature.replace("-", " ").capitalize()})
+def csrf_failure(request, reason=""):
+    """Shown when a form's CSRF token is missing or expired."""
+    return render(request, "403.html", {"csrf": True}, status=403)
