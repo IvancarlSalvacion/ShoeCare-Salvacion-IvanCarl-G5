@@ -41,3 +41,7 @@ Public sign-up always creates a Customer. Log in as an admin, open
 
 ## Tests
 `python manage.py test`
+
+## Running the tests
+
+Run python manage.py test
